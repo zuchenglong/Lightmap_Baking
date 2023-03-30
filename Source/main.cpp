@@ -5,6 +5,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 #include <glm/glm.hpp>
 
 using namespace std;
@@ -109,6 +111,7 @@ void initScreenProgram()
 
 GLuint VBO, VAO, EBO;
 
+GLuint ColorTexture;
 GLuint FrameColorTexture;
 
 GLuint FBO;
@@ -199,13 +202,13 @@ void initScene()
 
 void initFramebuffer()
 {
-	glGenTextures(1, &FrameColorTexture);
-	glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
+#if 1
+	glGenTextures(1, &ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, ColorTexture);
 
-#if 0
 	string tex_path = ProjectDir + "/Assets/Texture/container.jpg";
-	int width, height, nrComponents;
-	unsigned char* data = stbi_load(tex_path.c_str(), &width, &height, &nrComponents, 0);
+	int nwidth, nheight, nrComponents;
+	unsigned char* data = stbi_load(tex_path.c_str(), &nwidth, &nheight, &nrComponents, 0);
 	if (data)
 	{
 		GLenum format;
@@ -226,7 +229,8 @@ void initFramebuffer()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, nwidth, nheight, 0, format, GL_UNSIGNED_BYTE, data);
+		size_t length = strlen(reinterpret_cast<const char*>(data));
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		stbi_image_free(data);
@@ -237,20 +241,22 @@ void initFramebuffer()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_CLAMP_TO_EDGE);
-		unsigned char color[] = { 255,0,0,255 };
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		unsigned char color[] = { 255,0,255,255 };
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, color);
 
 		stbi_image_free(data);
 	}
-#endif // 0
+#endif // F
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+#if 1
+	glGenTextures(1, &FrameColorTexture);
+	glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
 
 	glGenFramebuffers(1, &FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FrameColorTexture, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+#endif // 绑定Framebuffer
 }
 
 
@@ -277,22 +283,34 @@ void destoryBuffer()
 
 void renderThread(GLFWwindow* renderWindow)
 {
+	glfwMakeContextCurrent(renderWindow);
+
 	while (!glfwWindowShouldClose(renderWindow))
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-		glViewport(0, 0, width, height);
+		//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-		glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glUseProgram(shaderProgram);
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
+		////glUseProgram(shaderProgram);
+		////glBindVertexArray(VAO);
+		////glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		////glBindVertexArray(0);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//glViewport(0, 0, width, height);
 
-		glfwSwapBuffers(renderWindow);
+		//glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
+		//unsigned char* pixels = new unsigned char[width * height * 4];
+		//glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+		//stbi_write_png("output.png", width, height, 4, pixels, width * 4);
+		//delete[] pixels;
+
+		glBindTexture(GL_TEXTURE_2D, ColorTexture);
+		unsigned char* pixels = new unsigned char[512 * 512 * 3];
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+		stbi_write_png("output.png", 512, 512, 3, pixels, 512 * 3);
+		delete[] pixels;
 	}
 
 	//glfwMakeContextCurrent(NULL);
@@ -320,19 +338,19 @@ int main()
 
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 	GLFWwindow* renderWindow = glfwCreateWindow(width, height, "RenderThread", nullptr, window);
-	//glfwMakeContextCurrent(renderWindow);
-
 	std::thread renderThread(renderThread, renderWindow);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	while (!glfwWindowShouldClose(window))	//上屏线程
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		glViewport(0, 0, width, height);
+
+#if 1
 		glDisable(GL_DEPTH_TEST);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -345,6 +363,7 @@ int main()
 
 		glBindVertexArray(screenVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+#endif // FBO Texture 上屏逻辑
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

@@ -8,7 +8,6 @@ add_definitions(-DPROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 set(ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set(SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 set(EXTERNAL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/External)
-message("==============" ${SOURCE_PATH})
 
 project ("Lightmap_Baking")
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
