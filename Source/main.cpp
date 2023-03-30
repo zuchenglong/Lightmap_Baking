@@ -1,4 +1,5 @@
 #include <thread>
+#include <mutex>
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
 #include "Lightmap_Baking.h"
@@ -8,6 +9,11 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 #include <glm/glm.hpp>
+
+// 主线程 画面是否上屏
+#define DRAW_SCREEN_MAINLOOP
+// 是否开启 渲染线程
+#define ENABLE_RENDERTHREAD
 
 using namespace std;
 
@@ -251,14 +257,18 @@ void initFramebuffer()
 #if 1
 	glGenTextures(1, &FrameColorTexture);
 	glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 	glGenFramebuffers(1, &FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FrameColorTexture, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif // 绑定Framebuffer
 }
-
 
 void destorySceneBuffer()
 {
@@ -281,36 +291,78 @@ void destoryBuffer()
 	destoryScreenBuffer();
 }
 
+void mainLoop()
+{
+#ifndef DRAW_SCREEN_MAINLOOP
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+#endif // 
+
+#if 1
+	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glUseProgram(screenShaderProgram);
+	glUniform1i(glGetUniformLocation(screenShaderProgram, "screenTexture"), 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, ColorTexture);
+
+	glBindVertexArray(screenVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+#endif // 绘制 Texture
+
+#ifndef DRAW_SCREEN_MAINLOOP
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+
+#ifndef DRAW_SCREEN_MAINLOOP
+	glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
+	unsigned char* pixels = new unsigned char[width * height * 4];
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	stbi_write_png("output_Frame.png", width, height, 4, pixels, width * 4);
+	delete[] pixels;
+#endif // 写入 FrameTexture
+}
+
+void renderLoop()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glUseProgram(shaderProgram);
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+
+	glViewport(0, 0, width, height);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+#if 1
+	glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
+	unsigned char* pixels = new unsigned char[width * height * 4];
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	stbi_write_png("output_Frame_RenderLoop.png", width, height, 4, pixels, width * 4);
+	delete[] pixels;
+#endif // 写入 FrameTexture
+
+#if 0
+	glBindTexture(GL_TEXTURE_2D, ColorTexture);
+	unsigned char* pixels = new unsigned char[512 * 512 * 3];
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+	stbi_write_png("output_Color.png", width, height, 3, pixels, width * 3);
+	delete[] pixels;
+#endif //写入 ColorTexture
+}
+
 void renderThread(GLFWwindow* renderWindow)
 {
-	glfwMakeContextCurrent(renderWindow);
+	//glfwMakeContextCurrent(renderWindow);
 
 	while (!glfwWindowShouldClose(renderWindow))
 	{
-		//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-
-		//glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		////glUseProgram(shaderProgram);
-		////glBindVertexArray(VAO);
-		////glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		////glBindVertexArray(0);
-
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		//glViewport(0, 0, width, height);
-
-		//glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
-		//unsigned char* pixels = new unsigned char[width * height * 4];
-		//glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-		//stbi_write_png("output.png", width, height, 4, pixels, width * 4);
-		//delete[] pixels;
-
-		glBindTexture(GL_TEXTURE_2D, ColorTexture);
-		unsigned char* pixels = new unsigned char[512 * 512 * 3];
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-		stbi_write_png("output.png", 512, 512, 3, pixels, 512 * 3);
-		delete[] pixels;
+		renderLoop();
 	}
 
 	//glfwMakeContextCurrent(NULL);
@@ -338,38 +390,22 @@ int main()
 
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 	GLFWwindow* renderWindow = glfwCreateWindow(width, height, "RenderThread", nullptr, window);
-	std::thread renderThread(renderThread, renderWindow);
+
+#ifdef ENABLE_RENDERTHREAD
+	std::thread renderThread(renderThread, window);
+#endif // ENABLE_RENDERTHREAD
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	while (!glfwWindowShouldClose(window))	//上屏线程
+	while (!glfwWindowShouldClose(window))	//主渲染线程
 	{
-		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		glViewport(0, 0, width, height);
-
-#if 1
-		glDisable(GL_DEPTH_TEST);
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glUseProgram(screenShaderProgram);
-		glUniform1i(glGetUniformLocation(screenShaderProgram, "screenTexture"), 0);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
-
-		glBindVertexArray(screenVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-#endif // FBO Texture 上屏逻辑
+		mainLoop();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	//renderThread.join();
+	renderThread.join();
 
 	destoryBuffer();
 
