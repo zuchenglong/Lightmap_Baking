@@ -1,14 +1,16 @@
 #include <thread>
-#include <mutex>
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
-#include "Lightmap_Baking.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 #include <glm/glm.hpp>
+
+#include "Light_Baking.h"
+#include "Scene_Rendering.h"
+
 
 // 主线程 画面是否上屏
 #define DRAW_SCREEN_MAINLOOP 1
@@ -26,7 +28,7 @@ GLuint fragmentShader;
 
 GLuint shaderProgram;
 
-void initSceneProgram()
+void initBakingProgram()
 {
 	const char* vertexShaderSource =
 		"#version 330 core\n"
@@ -66,7 +68,7 @@ GLuint screenFragmentShader;
 
 GLuint screenShaderProgram;
 
-void initScreenProgram()
+void initSceneProgram()
 {
 	const char* vertexShaderSource =
 		"#version 330 core\n"
@@ -122,7 +124,7 @@ GLuint FrameColorTexture;
 
 GLuint FBO;
 
-void generateSceneBuffer()
+void generateBakingBuffer()
 {
 	// 设置顶点数据
 	float vertices[] = {
@@ -156,7 +158,7 @@ void generateSceneBuffer()
 
 GLuint screenVAO, screenVBO;
 
-void generateScreenBuffer()
+void generateSceneBuffer()
 {
 	float screenVertices[] =
 	{
@@ -194,16 +196,16 @@ void generateScreenBuffer()
 	glBindVertexArray(0);
 }
 
-void initScreen()
-{
-	initScreenProgram();
-	generateScreenBuffer();
-}
-
-void initScene()
+void initSceneRender()
 {
 	initSceneProgram();
 	generateSceneBuffer();
+}
+
+void initBakingRender()
+{
+	initBakingProgram();
+	generateBakingBuffer();
 }
 
 void initFramebuffer()
@@ -393,11 +395,11 @@ int main()
 	glfwSwapInterval(1);
 
 	// 初始化渲染资源 VAO/VBO/Texture/Framebuffer
-	initScene();
-	initScreen();
+	initBakingRender();
+	initSceneRender();
+
 	initFramebuffer();
 	initColorTexture();
-
 
 #if ENABLE_RENDERTHREAD
 	std::thread renderThread(renderThread, renderWindow);

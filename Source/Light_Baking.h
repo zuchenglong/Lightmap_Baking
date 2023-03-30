@@ -7,3 +7,16 @@
 #include <glad/glad.h>
 
 // TODO: Reference additional headers your program requires here.
+
+class Light_Baking
+{
+public:
+	Light_Baking();
+	~Light_Baking();
+
+	void InitRenderBuffer();
+
+	void InitShaderProgram();
+private:
+
+};
