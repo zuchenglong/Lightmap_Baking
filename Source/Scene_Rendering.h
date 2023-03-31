@@ -12,21 +12,23 @@ public:
 	~Scene_Rendering();
 
 	void InitRenderData();
+	void InitRenderData(GLuint sharedVBO);
 	void OnSceneRendering();
 private:
-	GLuint screenVAO, screenVBO;
+	GLuint VAO, VBO;
 
-	GLuint screenVertexShader;
-	GLuint screenFragmentShader;
+	GLuint vertexShader;
+	GLuint fragmentShader;
 
-	GLuint screenShaderProgram;
+	GLuint shaderProgram;
 
-	GLuint ColorTexture;
-	GLuint FrameColorTexture;
+	GLuint colorTexture;
+	GLuint frameColorTexture;
 
 	GLuint FBO;
 private:
 	void InitRenderBuffer();
+	void InitRenderBuffer(GLuint sharedVBO);
 
 	void InitShaderProgram();
 

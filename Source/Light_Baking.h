@@ -18,6 +18,7 @@ public:
 	~Light_Baking();
 
 	void InitRenderData();
+	void InitRenderData(GLuint sharedVBO);
 	void OnBakeRendering();
 private:
 	GLuint vertexShader;
@@ -25,14 +26,15 @@ private:
 
 	GLuint shaderProgram;
 
-	GLuint VBO, VAO, EBO;
+	GLuint VBO, VAO;
 
-	GLuint ColorTexture;
-	GLuint FrameColorTexture;
+	GLuint colorTexture;
+	GLuint frameColorTexture;
 
 	GLuint FBO;
 private:
 	void InitRenderBuffer();
+	void InitRenderBuffer(GLuint sharedVBO);
 
 	void InitShaderProgram();
 

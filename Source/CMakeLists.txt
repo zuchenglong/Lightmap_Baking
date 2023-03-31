@@ -9,10 +9,9 @@ add_executable (
 				${EXTERNAL_PATH}/glfw/deps/glad.c 
 
 				${SOURCE_PATH}/main.cpp 
+				${SOURCE_PATH}/Define.cpp 				
 				${SOURCE_PATH}/Light_Baking.cpp
 				${SOURCE_PATH}/Scene_Rendering.cpp
-				${SOURCE_PATH}/Define.cpp 
-				
 				)
 
 target_link_libraries(${PROJECT_NAME} glfw ${GLFW_LIBRARIES})

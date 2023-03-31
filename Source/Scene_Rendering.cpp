@@ -27,39 +27,55 @@ void Scene_Rendering::InitRenderData()
 	InitColorTexture();
 }
 
+void Scene_Rendering::InitRenderData(GLuint sharedVBO)
+{
+	InitRenderBuffer(sharedVBO);
+	InitShaderProgram();
+
+	InitFrameBuffer();
+	InitColorTexture();
+}
+
 void Scene_Rendering::InitRenderBuffer()
 {
 	float screenVertices[] =
 	{
-		// positions   // texCoords
-		//-1.0f,  1.0f,  0.0f, 1.0f,
-		//-1.0f, -1.0f,  0.0f, 0.0f,
-		// 1.0f, -1.0f,  1.0f, 0.0f,
+		// positions		// texCoords
+		-0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.0f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.0f,  1.0f, 0.0f,
 
-		//-1.0f,  1.0f,  0.0f, 1.0f,
-		// 1.0f, -1.0f,  1.0f, 0.0f,
-		// 1.0f,  1.0f,  1.0f, 1.0f
-
-		-0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f,  1.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  1.0f, 1.0f
+		-0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.0f,  1.0f, 1.0f
 	};
 
-	glGenVertexArrays(1, &screenVAO);
-	glGenBuffers(1, &screenVBO);
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
 
-	glBindVertexArray(screenVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, screenVBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(screenVertices), screenVertices, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void Scene_Rendering::InitRenderBuffer(GLuint sharedVBO)
+{
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, sharedVBO);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -69,7 +85,7 @@ void Scene_Rendering::InitShaderProgram()
 {
 	const char* vertexShaderSource =
 		"#version 330 core\n"
-		"layout (location = 0) in vec2 aPos;\n"
+		"layout (location = 0) in vec3 aPos;\n"
 		"layout (location = 1) in vec2 aTexCoords;\n"
 
 		"out vec2 TexCoords;\n"
@@ -77,7 +93,7 @@ void Scene_Rendering::InitShaderProgram()
 		"void main()\n"
 		"{\n"
 		"   TexCoords = aTexCoords;\n"
-		"   gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);\n"
+		"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 		"}\0";
 
 	const char* fragmentShaderSource =
@@ -91,34 +107,33 @@ void Scene_Rendering::InitShaderProgram()
 		"{\n"
 		"   vec3 col = texture(screenTexture, TexCoords).rgb;\n"
 		"   FragColor = vec4(col, 1.0);\n"
-		//"   FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
 		"}\n\0";
 
-	screenVertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(screenVertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(screenVertexShader);
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	glCompileShader(vertexShader);
 
-	screenFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(screenFragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(screenFragmentShader);
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+	glCompileShader(fragmentShader);
 
-	screenShaderProgram = glCreateProgram();
-	glAttachShader(screenShaderProgram, screenVertexShader);
-	glAttachShader(screenShaderProgram, screenFragmentShader);
-	glLinkProgram(screenShaderProgram);
+	shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
 
-	glUseProgram(screenShaderProgram);
-	glUniform1i(glGetUniformLocation(screenShaderProgram, "screenTexture"), 0);
+	glUseProgram(shaderProgram);
+	glUniform1i(glGetUniformLocation(shaderProgram, "screenTexture"), 0);
 
-	glDeleteShader(screenVertexShader);
-	glDeleteShader(screenFragmentShader);
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
 }
 
 void Scene_Rendering::InitFrameBuffer()
 {
 #if 1
-	glGenTextures(1, &FrameColorTexture);
-	glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
+	glGenTextures(1, &frameColorTexture);
+	glBindTexture(GL_TEXTURE_2D, frameColorTexture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_CLAMP_TO_EDGE);
@@ -127,7 +142,7 @@ void Scene_Rendering::InitFrameBuffer()
 
 	glGenFramebuffers(1, &FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FrameColorTexture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameColorTexture, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif // °ó¶¨Framebuffer
 }
@@ -135,8 +150,8 @@ void Scene_Rendering::InitFrameBuffer()
 void Scene_Rendering::InitColorTexture()
 {
 #if 1
-	glGenTextures(1, &ColorTexture);
-	glBindTexture(GL_TEXTURE_2D, ColorTexture);
+	glGenTextures(1, &colorTexture);
+	glBindTexture(GL_TEXTURE_2D, colorTexture);
 
 	string tex_path = ProjectDir + "/Assets/Texture/container.jpg";
 	int nwidth, nheight, nrComponents;
@@ -190,13 +205,13 @@ void Scene_Rendering::OnSceneRendering()
 	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glUseProgram(screenShaderProgram);
-	glUniform1i(glGetUniformLocation(screenShaderProgram, "screenTexture"), 0);
+	glUseProgram(shaderProgram);
+	glUniform1i(glGetUniformLocation(shaderProgram, "screenTexture"), 0);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, colorTexture);
 
-	glBindVertexArray(screenVAO);
+	glBindVertexArray(VAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 #if !DRAW_SCREEN_MAINTHREAD
@@ -214,7 +229,7 @@ void Scene_Rendering::OnSceneRendering()
 
 Scene_Rendering::~Scene_Rendering()
 {
-	glDeleteVertexArrays(1, &screenVAO);
-	glDeleteBuffers(1, &screenVBO);
-	glDeleteProgram(screenShaderProgram);
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteProgram(shaderProgram);
 }

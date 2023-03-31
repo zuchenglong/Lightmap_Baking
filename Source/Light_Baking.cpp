@@ -38,6 +38,15 @@ void Light_Baking::InitRenderData()
 	InitColorTexture();
 }
 
+void Light_Baking::InitRenderData(GLuint sharedVBO)
+{
+	InitRenderBuffer(sharedVBO);
+	InitShaderProgram();
+
+	InitFrameBuffer();
+	InitColorTexture();
+}
+
 void Light_Baking::InitShaderProgram()
 {
 	const char* vertexShaderSource =
@@ -77,30 +86,43 @@ void Light_Baking::InitRenderBuffer()
 {
 	// 设置顶点数据
 	float vertices[] = {
-		 0.5f,  0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		-0.5f, -0.5f, 0.0f,
-		-0.5f,  0.5f, 0.0f
-	};
+		// positions		// texCoords
+		-0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.0f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.0f,  1.0f, 0.0f,
 
-	GLuint indices[] = {
-		0, 1, 3,
-		1, 2, 3
+		-0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.0f,  1.0f, 1.0f
 	};
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void Light_Baking::InitRenderBuffer(GLuint sharedVBO)
+{
+	glGenVertexArrays(1, &VAO);
+
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, sharedVBO);
 
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -109,8 +131,8 @@ void Light_Baking::InitRenderBuffer()
 void Light_Baking::InitFrameBuffer() 
 {
 #if 1
-	glGenTextures(1, &FrameColorTexture);
-	glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
+	glGenTextures(1, &frameColorTexture);
+	glBindTexture(GL_TEXTURE_2D, frameColorTexture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_CLAMP_TO_EDGE);
@@ -119,7 +141,7 @@ void Light_Baking::InitFrameBuffer()
 
 	glGenFramebuffers(1, &FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FrameColorTexture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameColorTexture, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif // 绑定Framebuffer
 }
@@ -127,8 +149,8 @@ void Light_Baking::InitFrameBuffer()
 void Light_Baking::InitColorTexture()
 {
 #if 1
-	glGenTextures(1, &ColorTexture);
-	glBindTexture(GL_TEXTURE_2D, ColorTexture);
+	glGenTextures(1, &colorTexture);
+	glBindTexture(GL_TEXTURE_2D, colorTexture);
 
 	string tex_path = ProjectDir + "/Assets/Texture/container.jpg";
 	int nwidth, nheight, nrComponents;
@@ -183,8 +205,8 @@ void Light_Baking::OnBakeRendering()
 	
 	glUseProgram(shaderProgram);
 	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
 	glBindVertexArray(0);
 
 	glViewport(0, 0, width, height);
@@ -194,7 +216,7 @@ void Light_Baking::OnBakeRendering()
 #endif
 
 #if !DRAW_SCREEN_BAKETHREAD
-	glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
+	glBindTexture(GL_TEXTURE_2D, frameColorTexture);
 	unsigned char* pixels = new unsigned char[width * height * 4];
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	stbi_write_png("output_Frame_BakingThread.png", width, height, 4, pixels, width * 4);
@@ -202,7 +224,7 @@ void Light_Baking::OnBakeRendering()
 #endif // 写入 FrameTexture
 
 #if 0
-	glBindTexture(GL_TEXTURE_2D, ColorTexture);
+	glBindTexture(GL_TEXTURE_2D, colorTexture);
 	unsigned char* pixels = new unsigned char[512 * 512 * 3];
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 	stbi_write_png("output_Color.png", width, height, 3, pixels, width * 3);
@@ -214,6 +236,5 @@ Light_Baking::~Light_Baking()
 {
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &EBO);
 	glDeleteProgram(shaderProgram);
 }
