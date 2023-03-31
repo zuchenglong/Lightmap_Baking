@@ -53,7 +53,7 @@ void Light_Baking::InitShaderProgram()
 		"out vec4 FragColor;\n"
 		"void main()\n"
 		"{\n"
-		"   FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+		"   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
 		"}\n\0";
 
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -174,26 +174,30 @@ void Light_Baking::InitColorTexture()
 }
 void Light_Baking::OnBakeRendering()
 {
+#if !DRAW_SCREEN_BAKETHREAD
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+#endif // !DRAW_SCREEN_BAKETHREAD
 
 	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+	
 	glUseProgram(shaderProgram);
-	cout << glGetError() << endl;
 	glBindVertexArray(VAO);
-	cout << glGetError() << endl;
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	cout << glGetError() << endl;
+	
 	glBindVertexArray(0);
 
 	glViewport(0, 0, width, height);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-#if 1
+#if !DRAW_SCREEN_BAKETHREAD
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+
+#if !DRAW_SCREEN_BAKETHREAD
 	glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
 	unsigned char* pixels = new unsigned char[width * height * 4];
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	stbi_write_png("output_Frame_RenderLoop.png", width, height, 4, pixels, width * 4);
+	stbi_write_png("output_Frame_BakingThread.png", width, height, 4, pixels, width * 4);
 	delete[] pixels;
 #endif // 写入 FrameTexture
 

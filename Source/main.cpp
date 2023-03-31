@@ -25,7 +25,11 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);//设置次版本号
 	GLFWwindow* window = glfwCreateWindow(width, height, "LightmapBaking", NULL, NULL);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);//使用核心模式
+	
+#if !DRAW_SCREEN_BAKETHREAD
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+#endif // DRAW_SCREEN_BAKETHREAD
+
 	GLFWwindow* bakeContext = glfwCreateWindow(width, height, "RenderThread", nullptr, window);
 
 	glfwMakeContextCurrent(window);
@@ -36,7 +40,7 @@ int main()
 	sceneRendering = new Scene_Rendering(window);
 	sceneRendering->InitRenderData();
 
-#if ENABLE_RENDERTHREAD
+#if ENABLE_BAKETHREAD
 	std::thread bakeThread(bakeThread, bakeContext);
 #endif // ENABLE_RENDERTHREAD
 
@@ -50,7 +54,7 @@ int main()
 		glfwPollEvents();
 	}
 
-#if ENABLE_RENDERTHREAD
+#if ENABLE_BAKETHREAD
 	bakeThread.join();
 #endif
 
@@ -70,7 +74,7 @@ void bakeThread(GLFWwindow* bakeContext)
 	lightBaking = new Light_Baking(bakeContext);
 	lightBaking->InitRenderData();
 
-	while (!glfwWindowShouldClose(bakeContext))	//主渲染线程
+	while (!glfwWindowShouldClose(bakeContext))
 	{
 		lightBaking->OnBakeRendering();
 

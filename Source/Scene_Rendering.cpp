@@ -183,11 +183,10 @@ void Scene_Rendering::InitColorTexture()
 
 void Scene_Rendering::OnSceneRendering()
 {
-#if !DRAW_SCREEN_MAINLOOP
+#if !DRAW_SCREEN_MAINTHREAD
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 #endif // 
 
-#if 1
 	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -199,17 +198,16 @@ void Scene_Rendering::OnSceneRendering()
 
 	glBindVertexArray(screenVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-#endif // ªÊ÷∆ Texture
 
-#if !DRAW_SCREEN_MAINLOOP
+#if !DRAW_SCREEN_MAINTHREAD
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
 
-#if !DRAW_SCREEN_MAINLOOP
+#if !DRAW_SCREEN_MAINTHREAD
 	glBindTexture(GL_TEXTURE_2D, FrameColorTexture);
 	unsigned char* pixels = new unsigned char[width * height * 4];
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	stbi_write_png("output_Frame.png", width, height, 4, pixels, width * 4);
+	stbi_write_png("output_Frame_MainThread.png", width, height, 4, pixels, width * 4);
 	delete[] pixels;
 #endif // –¥»Î FrameTexture
 }
