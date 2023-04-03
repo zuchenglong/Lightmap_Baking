@@ -12,6 +12,14 @@ add_executable (
 				${SOURCE_PATH}/Define.cpp 				
 				${SOURCE_PATH}/Light_Baking.cpp
 				${SOURCE_PATH}/Scene_Rendering.cpp
-				)
+				${SOURCE_PATH}/Component/Mesh.cpp
+				${SOURCE_PATH}/Component/Model.cpp
+				${SOURCE_PATH}/Component/Camera.cpp 				
+				${SOURCE_PATH}/Component/Shader.cpp
+				${SOURCE_PATH}/Component/Material.cpp
+				${SOURCE_PATH}/Component/TextureLoader.cpp
+				${SOURCE_PATH}/Component/ModelLoader.cpp
+)
 
 target_link_libraries(${PROJECT_NAME} glfw ${GLFW_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} assimp)

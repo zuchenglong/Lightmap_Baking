@@ -2,6 +2,8 @@
 #include "Scene_Rendering.h"
 
 #include "Define.h"
+#include "Component/Camera.h"
+#include "Component/ModelLoader.h"
 
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -15,6 +17,10 @@ Scene_Rendering::Scene_Rendering()
 
 Scene_Rendering::Scene_Rendering(GLFWwindow* window)
 {
+	m_Model = new Model();
+	ModelLoader::Get()->LoadModel(ProjectAssetsDir + "/Models/Scene.obj", m_Model);
+	m_Model->Init();
+
 	glfwMakeContextCurrent(window);
 }
 
@@ -198,6 +204,10 @@ void Scene_Rendering::InitColorTexture()
 
 void Scene_Rendering::OnSceneRendering()
 {
+	Camera::Get()->UpdateCameraTransform();
+	m_Model->Show();
+
+	/*
 #if !DRAW_SCREEN_MAINTHREAD
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 #endif // 
@@ -225,6 +235,8 @@ void Scene_Rendering::OnSceneRendering()
 	stbi_write_png("output_Frame_MainThread.png", width, height, 4, pixels, width * 4);
 	delete[] pixels;
 #endif // –¥»Î FrameTexture
+
+*/
 }
 
 Scene_Rendering::~Scene_Rendering()

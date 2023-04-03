@@ -91,14 +91,6 @@ void initVertexBuffers()
 		 0.5f,  0.5f,  0.0f,  1.0f, 1.0f
 	};
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-#if 0
-	// 此处VAO/VBO绑定时设定
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
-#endif // 0
 }
 
 void bakeThread(GLFWwindow* bakeContext)
@@ -113,8 +105,6 @@ void bakeThread(GLFWwindow* bakeContext)
 	lightBaking->InitRenderData();
 #endif // MUTITHREAD_SHAREVBO
 
-
-
 	while (!glfwWindowShouldClose(bakeContext))
 	{
 		lightBaking->OnBakeRendering();
@@ -124,4 +114,6 @@ void bakeThread(GLFWwindow* bakeContext)
 
 	glfwMakeContextCurrent(NULL);
 	glfwDestroyWindow(bakeContext);
+
+	delete(lightBaking);
 }
