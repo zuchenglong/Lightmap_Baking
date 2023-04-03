@@ -61,6 +61,6 @@ void main(){
     vec3 specularColor = (directionLight.color + material.specular) * specular;
     vec3 ambientColor = material.ambient;
 
-    FragColor = vec4(vec3(outValue), 1);
-
+    //FragColor = vec4(vec3(outValue), 1);
+    FragColor = vec4(1.0,1.0,1.0,1.0);
 }

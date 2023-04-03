@@ -9,17 +9,20 @@
 
 // TODO: Reference additional headers your program requires here.
 
-class Light_Baking
+class BakingThread
 {
 public:
-	Light_Baking();
-	Light_Baking(GLFWwindow* renderWindow);
+	BakingThread();
+	BakingThread(GLFWwindow* renderWindow);
 
-	~Light_Baking();
+	~BakingThread();
+
+	void Init();
+
+	void Update();
 
 	void InitRenderData();
 	void InitRenderData(GLuint sharedVBO);
-	void OnBakeRendering();
 private:
 	GLuint vertexShader;
 	GLuint fragmentShader;
@@ -41,4 +44,6 @@ private:
 	void InitFrameBuffer();
 
 	void InitColorTexture();
+
+	void OnBakeRendering();
 };

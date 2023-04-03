@@ -10,8 +10,8 @@ add_executable (
 
 				${SOURCE_PATH}/main.cpp 
 				${SOURCE_PATH}/Define.cpp 				
-				${SOURCE_PATH}/Light_Baking.cpp
-				${SOURCE_PATH}/Scene_Rendering.cpp
+				${SOURCE_PATH}/Core/BakingThread.cpp
+				${SOURCE_PATH}/Core/RenderingThread.cpp
 				${SOURCE_PATH}/Component/Mesh.cpp
 				${SOURCE_PATH}/Component/Model.cpp
 				${SOURCE_PATH}/Component/Camera.cpp 				

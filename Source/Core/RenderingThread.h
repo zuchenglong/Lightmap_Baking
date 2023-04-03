@@ -7,16 +7,19 @@
 #include "Component/Model.h"
 #include "Component/Shader.h"
 
-class Scene_Rendering
+class RenderingThread
 {
 public:
-	Scene_Rendering();
-	Scene_Rendering(GLFWwindow*);
-	virtual ~Scene_Rendering();
+	RenderingThread();
+	RenderingThread(GLFWwindow*);
+	virtual ~RenderingThread();
+
+	void Init();
+
+	void Update();
 
 	void InitRenderData();
 	void InitRenderData(GLuint sharedVBO);
-	void OnSceneRendering();
 private:
 	GLuint VAO, VBO;
 
@@ -41,4 +44,6 @@ private:
 	void InitFrameBuffer();
 
 	void InitColorTexture();
+
+	void OnSceneRendering();
 };
