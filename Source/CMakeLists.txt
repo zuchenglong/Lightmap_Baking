@@ -21,5 +21,7 @@ add_executable (
 				${SOURCE_PATH}/Component/ModelLoader.cpp
 )
 
+include_directories(${SOURCE_PATH})
+
 target_link_libraries(${PROJECT_NAME} glfw ${GLFW_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} assimp)

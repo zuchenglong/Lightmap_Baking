@@ -33,7 +33,7 @@ int main()
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 #endif // DRAW_SCREEN_BAKETHREAD
 
-	GLFWwindow* bakeContext = glfwCreateWindow(width, height, "RenderThread", nullptr, window);
+	GLFWwindow* bakeContext = glfwCreateWindow(width, height, "BakeThread", nullptr, window);
 
 	glfwMakeContextCurrent(window);
 
