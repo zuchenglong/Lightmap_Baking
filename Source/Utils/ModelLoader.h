@@ -3,14 +3,14 @@
 #ifndef COMPONENT_MODEL
 #define COMPONENT_MODEL
 
-#include "Mesh.h"
-#include "Shader.h"
+#include "Component/Mesh.h"
+#include "Component/Shader.h"
 
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 
-#include "Model.h"
+#include "Component/Model.h"
 
 class ModelLoader;
 

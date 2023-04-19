@@ -14,8 +14,8 @@ public:
 
 	void Init();
 
-	void Show();
-	void Show(Shader* shader);
+	void Render();
+	void Render(Shader* shader);
 	void SetMeshs(Mesh* mesh);
 private:
 	Shader* m_BlinnPhone = nullptr;

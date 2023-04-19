@@ -21,7 +21,7 @@ void Model::Init()
 	}
 }
 
-void Model::Show()
+void Model::Render()
 {
 	if (m_BlinnPhone == nullptr)
 	{
@@ -39,7 +39,7 @@ void Model::Show()
 	}
 }
 
-void Model::Show(Shader* shader)
+void Model::Render(Shader* shader)
 {
 	for (auto i : m_Meshs)
 	{

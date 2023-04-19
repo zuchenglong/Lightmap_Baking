@@ -14,18 +14,19 @@ add_executable (
 				${SOURCE_PATH}/Core/Input.cpp
 				${SOURCE_PATH}/Core/Time.cpp
 
-				${SOURCE_PATH}/Core/BakingThread.cpp
-				${SOURCE_PATH}/Core/RenderingThread.cpp
+				${SOURCE_PATH}/Utils/TextureLoader.cpp
+				${SOURCE_PATH}/Utils/ModelLoader.cpp
+
 				${SOURCE_PATH}/Component/Mesh.cpp
 				${SOURCE_PATH}/Component/Model.cpp
 				${SOURCE_PATH}/Component/Camera.cpp 				
 				${SOURCE_PATH}/Component/Shader.cpp
 				${SOURCE_PATH}/Component/Material.cpp
-				${SOURCE_PATH}/Component/TextureLoader.cpp
-				${SOURCE_PATH}/Component/ModelLoader.cpp
 
 				${SOURCE_PATH}/Application/Application.cpp
 				${SOURCE_PATH}/Application/CameraController.cpp
+				${SOURCE_PATH}/Application/Renderer/SceneBake.cpp
+				${SOURCE_PATH}/Application/Renderer/SceneRenderer.cpp
 )
 
 include_directories(${SOURCE_PATH})

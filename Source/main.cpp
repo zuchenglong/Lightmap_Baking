@@ -1,4 +1,3 @@
-#include <thread>
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
 
@@ -7,22 +6,10 @@
 #include "Define.h"
 #include "Core/Time.h"
 #include "Core/Input.h"
-#include "Core/BakingThread.h"
-#include "Core/RenderingThread.h"
 
 #include "Application/Application.h"
 
 using namespace std;
-
-GLuint m_SharedVBO;
-
-Application* m_Appliation = nullptr;
-
-RenderingThread* m_RenderingThread = nullptr;
-BakingThread* m_BakingThread = nullptr;
-
-void InitSharingVertexBuffers();
-void InitBakeThread(GLFWwindow* bakeContext);
 
 int main()
 {
@@ -46,8 +33,6 @@ int main()
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 #endif // DRAW_SCREEN_BAKETHREAD
 
-	GLFWwindow* bakeContext = glfwCreateWindow(width, height, "BakeThread", nullptr, window);
-
 	glfwMakeContextCurrent(window);
 
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
@@ -56,90 +41,23 @@ int main()
 	Input::Init();
 	Time::Init();
 
-	m_RenderingThread = new RenderingThread(window);
-	m_RenderingThread->Init();
-
-	m_Appliation = new Application();
-	m_Appliation->Init();
-
-#if MUTITHREAD_SHAREVBO
-	InitSharingVertexBuffers();
-	m_RenderingThread->InitRenderData(m_SharedVBO);
-#else
-	m_RenderingThread->InitRenderData();
-#endif
-
-#if ENABLE_BAKETHREAD
-	std::thread BakingThread(InitBakeThread, bakeContext);
-#endif // ENABLE_RENDERTHREAD
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	Application::Get()->Init(window);
 
 	while (!glfwWindowShouldClose(window))	//Ö÷äÖÈ¾Ïß³Ì
 	{
-		m_RenderingThread->Tick();
-		m_Appliation->Tick();
 		Input::Tick();
 		Time::Tick();
+
+		Application::Get()->Tick();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
-#if ENABLE_BAKETHREAD
-	BakingThread.join();
-#endif
-
-	delete(m_RenderingThread);
 
 	glfwMakeContextCurrent(NULL);
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
 	return 0;
-}
-
-void InitSharingVertexBuffers()
-{
-	glGenBuffers(1, &m_SharedVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, m_SharedVBO);
-
-	float vertices[] =
-	{
-		-0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.0f,  0.0f, 0.0f,
-		 0.5f, -0.5f,  0.0f,  1.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.0f,  1.0f, 1.0f
-	};
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-}
-
-void InitBakeThread(GLFWwindow* bakeContext)
-{
-	glfwMakeContextCurrent(bakeContext);
-
-	m_BakingThread = new BakingThread(bakeContext);
-	m_BakingThread->Init();
-
-#if MUTITHREAD_SHAREVBO
-	m_BakingThread->InitRenderData(m_SharedVBO);
-#else
-	m_BakingThread->InitRenderData();
-#endif // MUTITHREAD_SHAREVBO
-
-	while (!glfwWindowShouldClose(bakeContext))
-	{
-		m_BakingThread->Tick();
-
-		glfwSwapBuffers(bakeContext);
-	}
-
-	glfwMakeContextCurrent(NULL);
-	glfwDestroyWindow(bakeContext);
-
-	delete(m_BakingThread);
 }
 

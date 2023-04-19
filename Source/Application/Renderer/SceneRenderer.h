@@ -1,21 +1,18 @@
-﻿// Lightmap_Baking.h : Include file for standard system include files,
-// or project specific include files.
-
 #pragma once
 
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-// TODO: Reference additional headers your program requires here.
+#include "Component/Model.h"
+#include "Component/Shader.h"
 
-class BakingThread
+class SceneRenderer
 {
 public:
-	BakingThread();
-	BakingThread(GLFWwindow* renderWindow);
-
-	~BakingThread();
+	SceneRenderer();
+	SceneRenderer(GLFWwindow*);
+	virtual ~SceneRenderer();
 
 	void Init();
 
@@ -24,17 +21,20 @@ public:
 	void InitRenderData();
 	void InitRenderData(GLuint sharedVBO);
 private:
+	GLuint VAO, VBO;
+
 	GLuint vertexShader;
 	GLuint fragmentShader;
 
 	GLuint shaderProgram;
 
-	GLuint VBO, VAO;
-
 	GLuint colorTexture;
 	GLuint frameColorTexture;
 
 	GLuint FBO;
+
+	Model* m_Model;
+	Shader* m_Shader;
 private:
 	void InitRenderBuffer();
 	void InitRenderBuffer(GLuint sharedVBO);
@@ -45,5 +45,5 @@ private:
 
 	void InitColorTexture();
 
-	void OnBakeRendering();
+	void OnSceneRendering();
 };
