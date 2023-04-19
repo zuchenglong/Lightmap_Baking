@@ -34,7 +34,7 @@ void BakingThread::Init()
 
 }
 
-void BakingThread::Update()
+void BakingThread::Tick()
 {
 	OnBakeRendering();
 }

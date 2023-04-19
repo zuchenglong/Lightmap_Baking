@@ -16,7 +16,7 @@ public:
 
 	void Init();
 
-	void Update();
+	void Tick();
 
 	void InitRenderData();
 	void InitRenderData(GLuint sharedVBO);

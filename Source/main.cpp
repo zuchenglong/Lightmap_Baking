@@ -5,12 +5,18 @@
 #include <glm/glm.hpp>
 
 #include "Define.h"
+#include "Core/Time.h"
+#include "Core/Input.h"
 #include "Core/BakingThread.h"
 #include "Core/RenderingThread.h"
+
+#include "Application/Application.h"
 
 using namespace std;
 
 GLuint m_SharedVBO;
+
+Application* m_Appliation = nullptr;
 
 RenderingThread* m_RenderingThread = nullptr;
 BakingThread* m_BakingThread = nullptr;
@@ -29,6 +35,13 @@ int main()
 	GLFWwindow* window = glfwCreateWindow(width, height, "LightmapBaking", NULL, NULL);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);//使用核心模式
 
+#pragma region Input Callback
+	glfwSetKeyCallback(window, KeyEventCallback);
+	glfwSetMouseButtonCallback(window, MouseButtonEventCallback);
+	glfwSetScrollCallback(window, MouseScrollCallback);
+	glfwSetCursorPosCallback(window, MousePositionCallback);
+#pragma endregion
+
 #if !DRAW_SCREEN_BAKETHREAD
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 #endif // DRAW_SCREEN_BAKETHREAD
@@ -40,8 +53,14 @@ int main()
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 	glfwSwapInterval(1);
 
+	Input::Init();
+	Time::Init();
+
 	m_RenderingThread = new RenderingThread(window);
 	m_RenderingThread->Init();
+
+	m_Appliation = new Application();
+	m_Appliation->Init();
 
 #if MUTITHREAD_SHAREVBO
 	InitSharingVertexBuffers();
@@ -58,7 +77,10 @@ int main()
 
 	while (!glfwWindowShouldClose(window))	//主渲染线程
 	{
-		m_RenderingThread->Update();
+		m_RenderingThread->Tick();
+		m_Appliation->Tick();
+		Input::Tick();
+		Time::Tick();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -110,7 +132,7 @@ void InitBakeThread(GLFWwindow* bakeContext)
 
 	while (!glfwWindowShouldClose(bakeContext))
 	{
-		m_BakingThread->Update();
+		m_BakingThread->Tick();
 
 		glfwSwapBuffers(bakeContext);
 	}
@@ -120,3 +142,4 @@ void InitBakeThread(GLFWwindow* bakeContext)
 
 	delete(m_BakingThread);
 }
+

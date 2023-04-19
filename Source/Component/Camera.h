@@ -6,19 +6,19 @@
 
 class Camera;
 
-static Camera* camera;
+static Camera* m_MainCamera;
 
 class Camera
 {
 public:
-	static Camera* Get()
+	static Camera* GetMainCamera()
 	{
-		if (camera == nullptr)
+		if (m_MainCamera == nullptr)
 		{
-			camera = new Camera();
+			m_MainCamera = new Camera();
 		}
 
-		return camera;
+		return m_MainCamera;
 	}
 
 	Camera();

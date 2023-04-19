@@ -33,8 +33,8 @@ void Model::Show()
 		glm::mat4 model = glm::mat4(1.0f);
 		glm::translate(model, glm::vec3(0, 0, 1));
 		m_BlinnPhone->SetMat4("Model", model);
-		m_BlinnPhone->SetMat4("View", Camera::Get()->GetViewMatrix());
-		m_BlinnPhone->SetMat4("Projection",Camera::Get()->GetProjectionMatrix());
+		m_BlinnPhone->SetMat4("View", Camera::GetMainCamera()->GetViewMatrix());
+		m_BlinnPhone->SetMat4("Projection",Camera::GetMainCamera()->GetProjectionMatrix());
 		i->Draw(m_BlinnPhone);
 	}
 }

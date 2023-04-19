@@ -9,7 +9,11 @@ add_executable (
 				${EXTERNAL_PATH}/glfw/deps/glad.c 
 
 				${SOURCE_PATH}/main.cpp 
-				${SOURCE_PATH}/Define.cpp 				
+				${SOURCE_PATH}/Define.cpp
+				
+				${SOURCE_PATH}/Core/Input.cpp
+				${SOURCE_PATH}/Core/Time.cpp
+
 				${SOURCE_PATH}/Core/BakingThread.cpp
 				${SOURCE_PATH}/Core/RenderingThread.cpp
 				${SOURCE_PATH}/Component/Mesh.cpp
@@ -19,9 +23,13 @@ add_executable (
 				${SOURCE_PATH}/Component/Material.cpp
 				${SOURCE_PATH}/Component/TextureLoader.cpp
 				${SOURCE_PATH}/Component/ModelLoader.cpp
+
+				${SOURCE_PATH}/Application/Application.cpp
+				${SOURCE_PATH}/Application/CameraController.cpp
 )
 
 include_directories(${SOURCE_PATH})
+message(>>>>>>>>>>>>>>>>>>>> ${SOURCE_PATH})
 
 target_link_libraries(${PROJECT_NAME} glfw ${GLFW_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} assimp)

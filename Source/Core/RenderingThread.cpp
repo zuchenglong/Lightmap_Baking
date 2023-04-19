@@ -27,7 +27,7 @@ void RenderingThread::Init()
 	m_Model->Init();
 }
 
-void RenderingThread::Update()
+void RenderingThread::Tick()
 {
 	OnSceneRendering();
 }
@@ -212,7 +212,7 @@ void RenderingThread::InitColorTexture()
 
 void RenderingThread::OnSceneRendering()
 {
-	//Camera::Get()->UpdateCameraTransform();
+	Camera::GetMainCamera()->UpdateCameraTransform();
 	//m_Model->Show();
 
 #if !DRAW_SCREEN_MAINTHREAD
